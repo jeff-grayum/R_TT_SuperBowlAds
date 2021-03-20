@@ -17,13 +17,15 @@ library(tidyverse)
 library(tidytuesdayR)
 library(scales)
 library(ggthemes)
+library(lubridate)
 ```
 
 Loading dataset
 ```{r}
 tuesdata <- tidytuesdayR::tt_load('2021-03-02')
 
-youtube <- tuesdata$youtube
+youtube <- tuesdata$youtube %>%
+  select(-favorite_count)
 
 youtube %>%
   view()
@@ -60,5 +62,68 @@ youtube %>%
        x = "Year",
        y = "Number of ads",
        caption = "Source: FiveThirtyEight")
+```
+
+
+```{r}
+youtube %>%
+  gather(metric, value, contains("_count")) %>%
+  ggplot(aes(value)) +
+  geom_histogram(aes(fill = metric), bindiwdth = 0.5) +
+  scale_x_log10(labels = comma) +
+  theme_fivethirtyeight() +
+  labs(x = "Number of Views",
+       y = "Count",
+       title = "Distribution of YouTube Super Bowl ad metrics") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none") +
+  facet_wrap(~ metric) 
+```
+
+```{r}
+
+#Below, fct_reorder would not work until we filtered NA's! Consider this if ungrouping isnt fixing this issue.
+youtube %>%
+  filter(!is.na(view_count)) %>%
+  mutate(brand = fct_reorder(brand, view_count)) %>%
+  ggplot(aes(view_count, brand)) +
+  geom_boxplot() + 
+  scale_x_log10(labels = comma) +
+  labs(x = "Number of views",
+       y = "Brand",
+       title = "Most viewed Super Bowl YouTube ads") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+
+youtube %>%
+  ggplot(aes(year, view_count, group = year)) +
+  geom_boxplot() + 
+  scale_y_log10(labels = comma) +
+  labs(x = "Year",
+       y = "Number of views",
+       title = "Number of Super Bowl ads viewed each year") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+
+#Let's look at median views per year, using group_by and summarize
+youtube %>%
+  filter(!is.na(view_count)) %>%
+  group_by(year) %>%
+  summarize(n = n(),
+            median_views = median(view_count)) %>%
+  ggplot(aes(year, median_views)) +
+  geom_line() +
+  geom_point(aes(size = n)) +
+  theme_fivethirtyeight() +
+  labs(x = "Year",
+       y = "Median number of views",
+       title = "Median number of views of YouTube Super Bowl ads per year") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none") +
+  scale_y_continuous(labels = comma)
 ```
 
