@@ -114,6 +114,7 @@ youtube %>%
   group_by(year) %>%
   summarize(n = n(),
             median_views = median(view_count)) %>%
+  filter(n >= 7) %>%
   ggplot(aes(year, median_views)) +
   geom_line() +
   geom_point(aes(size = n)) +
@@ -125,5 +126,63 @@ youtube %>%
         text = element_text(family = "Times New Roman"),
         legend.position = "none") +
   scale_y_continuous(labels = comma)
+```
+
+
+```{r}
+youtube %>%
+  filter(year == "2017") %>%
+  arrange(desc(view_count)) %>%
+  view()
+```
+
+Let's look at the qualifications (e.g. "funny", "sexual", etc)
+```{r}
+#Gather: first var is title to gather variables under, second is title to gather values under, third is what to gather.  This is not an amazing way to look at this.
+youtube %>%
+  gather(category, value, funny:use_sex) %>%
+  ggplot(aes(category, view_count, fill = value)) + 
+  geom_boxplot() +
+  scale_y_log10(labels = comma) +
+  theme_fivethirtyeight() +
+  labs(title = "What has the greatest influence on the viewcount of YouTube Super Bowl ads",
+       x = "Category",
+       y = "View count",
+       fill = "") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+
+#Let's try a different approach
+youtube %>%
+  filter(!is.na(view_count)) %>%
+  gather(category, value, funny:use_sex) %>%
+  group_by(category, value) %>%
+  summarize(n = n(),
+            median_view_count = median(view_count)) %>%
+  ggplot(aes(category, median_view_count, fill = value)) +
+  geom_col(position = "dodge") +
+  theme_fivethirtyeight() +
+  labs(title = "What has the greatest influence on the viewcount of YouTube Super Bowl ads",
+       x = "Category",
+       y = "Median view count",
+       fill = "") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+#position = "dodge" places bars in same category beside each other, rather than stacking them!
+#This graph supports that patriotism and danger increase view counts!
+
+#Below, a great example of how to use cor() to analyze correlations between variables and values!!
+youtube %>%
+  filter(!is.na(view_count)) %>%
+  gather(category, value, funny:use_sex) %>%
+  group_by(category) %>%
+  summarize(correleation = cor(value, log(view_count + 1))) %>%
+  arrange(desc(correleation))
+
+#LETS MAKE A LINEAR MODEL BROTHER 
+lm(log2(view_count) ~ danger + patriotic + funny + 
+     show_product_quickly + celebrity + animals + use_sex,
+   data = youtube) %>%
+  summary()
 ```
 
