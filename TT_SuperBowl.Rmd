@@ -184,5 +184,27 @@ lm(log2(view_count) ~ danger + patriotic + funny +
      show_product_quickly + celebrity + animals + use_sex,
    data = youtube) %>%
   summary()
+#Not really a trend here.
 ```
+
+
+```{r}
+youtube %>%
+  gather(category, value, funny:use_sex) %>%
+  group_by(category,
+           year = 2 * (year %/% 2)) %>%
+  summarize(pct = mean(value),
+            n = n()) %>%
+  ggplot(aes(year, pct, color = category)) +
+  geom_line() +
+  scale_y_continuous(labels = percent) +
+  theme_fivethirtyeight() +
+  labs(x = "Year",
+       y = "% of ads",
+       title = "Change in how products were advertised over time",
+       color = "") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+```
+
 
