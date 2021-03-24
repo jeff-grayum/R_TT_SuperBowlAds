@@ -187,11 +187,11 @@ lm(log2(view_count) ~ danger + patriotic + funny +
 #Not really a trend here.
 ```
 
-
+#Really cool stringr trick below!!
 ```{r}
 youtube %>%
   gather(category, value, funny:use_sex) %>%
-  group_by(category,
+  group_by(category = str_to_title(str_replace_all(category, "_", " ")),
            year = 2 * (year %/% 2)) %>%
   summarize(pct = mean(value),
             n = n()) %>%
@@ -199,12 +199,18 @@ youtube %>%
   geom_line() +
   scale_y_continuous(labels = percent) +
   theme_fivethirtyeight() +
-  labs(x = "Year",
+  labs(x = "Time (rounded to 2-years)",
        y = "% of ads",
        title = "Change in how products were advertised over time",
        color = "") +
   theme(axis.title = element_text(),
-        text = element_text(family = "Times New Roman"))
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none") +
+  facet_wrap(~ category)
 ```
 
+
+```{r}
+
+```
 
