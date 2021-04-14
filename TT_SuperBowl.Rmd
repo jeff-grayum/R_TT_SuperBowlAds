@@ -209,8 +209,63 @@ youtube %>%
   facet_wrap(~ category)
 ```
 
-
+Let's make a glm!
 ```{r}
+glm(animals ~ year,
+    data = youtube,
+    family = "binomial") %>%
+  summary()
+
+glm(celebrity ~ year,
+    data = youtube,
+    family = "binomial") %>%
+  summary()
+
+glm(funny ~ year,
+    data = youtube,
+    family = "binomial") %>%
+  summary()
+
+glm(danger ~ year,
+    data = youtube,
+    family = "binomial") %>%
+  summary()
+
+
+#Combining these models into one model.
+coefficients <- youtube %>%
+  gather(category, value, funny:use_sex ) %>%
+  group_by(category) %>%
+  summarize(model = list(glm(value ~ year, family = "binomial"))) %>%
+  mutate(td = map(model, broom::tidy)) %>%
+  unnest(td) %>%
+  filter(term != "(Intercept)") %>%
+  arrange(desc(estimate))
+
+#Let's revise an earlier visual to only show trends over time.
+youtube %>%
+  gather(category, value, funny:use_sex) %>%
+  group_by(category,
+           year = 2 * (year %/% 2)) %>%
+  summarize(pct = mean(value),
+            n = n()) %>%
+  inner_join(coefficients, by = "category") %>%
+  mutate(category = str_to_title(str_replace_all(category, "_", " "))) %>%
+  filter(p.value <= 0.01) %>%
+  ggplot(aes(year, pct, color = category)) +
+  geom_line() +
+  scale_y_continuous(labels = percent) +
+  theme_fivethirtyeight() +
+  labs(x = "Time (rounded to 2-years)",
+       y = "% of ads",
+       title = "Change in how products were advertised over time",
+       color = "") +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none") +
+  facet_wrap(~ category)
+
+
 
 ```
 
