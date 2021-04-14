@@ -18,6 +18,7 @@ library(tidytuesdayR)
 library(scales)
 library(ggthemes)
 library(lubridate)
+library(tidytext)
 ```
 
 Loading dataset
@@ -264,6 +265,33 @@ youtube %>%
         text = element_text(family = "Times New Roman"),
         legend.position = "none") +
   facet_wrap(~ category)
+```
+
+
+```{r}
+#We keep gathering...let's just make a new dataset that's already gathered.
+gathered_categories <- youtube %>%
+  gather(category, value, funny:use_sex) %>%
+  mutate(category = str_to_title(str_replace_all(category, "_", " ")))
+
+
+gathered_categories %>%
+  group_by(brand, category) %>%
+  summarise(pct = mean(value)) %>%
+  ungroup() %>%
+  mutate(brand = reorder_within(brand, pct, category)) %>%
+  ggplot(aes(pct, brand, fill = category)) +
+  geom_col()  +
+  scale_x_continuous(labels = percent) +
+  scale_y_reordered() +
+  facet_wrap(~ category, scales = "free_y") +
+  labs(x = "% of ads using strategy",
+       y = "Brand",
+       title = "How are different prodcuts advertised during the Superbowl?")  +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none")
 
 
 
