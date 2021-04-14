@@ -293,7 +293,38 @@ gathered_categories %>%
         text = element_text(family = "Times New Roman"),
         legend.position = "none")
 
+gathered_categories %>%
+  group_by(brand, category) %>%
+  summarise(pct = mean(value)) %>%
+  ungroup() %>%
+  mutate(category = reorder_within(category, pct, brand)) %>%
+  ggplot(aes(pct, category, fill = category)) +
+  geom_col()  +
+  scale_x_continuous(labels = percent) +
+  scale_y_reordered() +
+  facet_wrap(~ brand, scales = "free_y") +
+  labs(x = "% of ads using strategy",
+       y = "Strategy",
+       title = "How are different prodcuts advertised during the Superbowl?")  +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "none")
 
+by_brand_category <- gathered_categories %>%
+  group_by(brand, category) %>%
+  summarize(pct = mean(value)) %>%
+  ungroup()
 
+#Let's make a geom_tile()
+by_brand_category %>%
+  ggplot(aes(category, brand, fill = pct)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", midpoint = 0.5)
+
+#Let's make a heat map!!
+by_brand_category %>%
+  reshape2::acast(brand ~ category, value.var = "pct") %>%
+  heatmap()
 ```
 
