@@ -328,3 +328,23 @@ by_brand_category %>%
   heatmap()
 ```
 
+Let's take a look at what people liked and disliked.
+```{r}
+youtube %>%
+  mutate(dislike_pct = dislike_count / view_count,
+         like_ratio = like_count / dislike_count) %>%
+  mutate(like_dislike_total = like_count + dislike_count) %>%
+  filter(like_dislike_total >= 1000) %>%
+  filter(!is.na(dislike_pct)) %>%
+  select(brand,year, title, description, view_count, like_count, dislike_count, 
+         dislike_pct, like_ratio, like_dislike_total) %>%
+  mutate(dislike_pct = dislike_count / (like_count + dislike_count)) %>%
+  arrange(desc(view_count)) %>%
+  ggplot(aes(view_count, dislike_pct)) +
+  geom_point() +
+  scale_x_log10(labels = comma) +
+  scale_y_continuous(labels = percent) +
+  labs(x = "View count (log scale)",
+       y = "Dislike %")
+```
+
